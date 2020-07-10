@@ -1,0 +1,8 @@
+name: Mounts
+version: 0.1.1
+main: creeoer.plugins.mounts.main.Mounts
+author: Creeoer
+
+commands:
+   mount:
+     description: mount commands
