@@ -71,10 +71,10 @@ public class SaddleListener implements Listener {
 						   Horse horse = MountEntity.spawn(event.getPlayer().getEyeLocation(), mount.getSpeed(), player.getName(), mount);
 						   horse.getInventory().setSaddle(new ItemStack(Material.SADDLE));
 						   horse.getInventory().setArmor(mount.getArmor());
-						   horse.setVariant(mount.getHorseType());
+						//   horse.setVariant(variant);(mount.getHorseType());
 						   
 						   
-						   if(horse.getVariant() != Variant.UNDEAD_HORSE || horse.getVariant() != Variant.SKELETON_HORSE)
+				//		   if(horse.getVariant() != Variant.UNDEAD_HORSE || horse.getVariant() != Variant.SKELETON_HORSE)
 						   horse.setColor(mount.getColor());
 						   
 						   player.sendMessage(Commands.MOUNT_PREFIX + ChatColor.GREEN + "You have summoned your mount!");

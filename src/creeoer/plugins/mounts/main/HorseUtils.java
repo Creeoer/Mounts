@@ -18,7 +18,7 @@ import net.minecraft.server.v1_15_R1.EntityHorse;
 public class HorseUtils {
 	
 	
-	@SuppressWarnings("deprecation")
+
 	public static Variant parseVariantFromString(String variant) {
 		
 		switch(variant.toLowerCase()) {
@@ -70,11 +70,11 @@ public class HorseUtils {
 		case "none":
 			return Material.AIR;
 		case "iron":
-			return Material.LEGACY_IRON_BARDING;
+			return Material.IRON_HORSE_ARMOR;
 		case "gold":
-			return Material.LEGACY_GOLD_BARDING;
+			return Material.GOLDEN_HORSE_ARMOR;
 		case "diamond":
-			return Material.LEGACY_DIAMOND_BARDING;
+			return Material.DIAMOND_HORSE_ARMOR;
 		
 		default:
 			return Material.AIR;

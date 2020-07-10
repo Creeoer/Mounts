@@ -18,14 +18,14 @@ public class HorseMount {
 	private Horse.Color color;
 	
 	
-	protected HorseMount(String name, int speed, String id,  double price, long rentTime, ItemStack armor, Variant horseType, boolean isOwnable, Horse.Color color) {
+	protected HorseMount(String name, int speed, String id,  double price, long rentTime, ItemStack armor, boolean isOwnable, Horse.Color color) {
 		this.id = id;
 		this.name = name;
 		this.speed = speed;
 		this.price = price;
 		this.rentTime = rentTime;
 		this.armor = armor;
-		this.horseType = horseType;
+		//this.horseType = horseType;
 		this.isOwnable = isOwnable;
 		this.color = color;
 	}

@@ -50,7 +50,7 @@ public class MountLoader {
 		  String name = horseFile.getString("Horse Rents." + horseSection + ".name");
 		  int speed = horseFile.getInt("Horse Rents." + horseSection + ".speed");
 		  double price = horseFile.getDouble("Horse Rents." + horseSection + ".price");
-		  Variant type = HorseUtils.parseVariantFromString(horseFile.getString("Horse Rents." + horseSection + ".type"));
+		 // Variant type = HorseUtils.parseVariantFromString(horseFile.getString("Horse Rents." + horseSection + ".type"));
 		  long time = horseFile.getLong("Horse Rents." + horseSection + ".time");
 		  boolean isOwnable = horseFile.getBoolean("Horse Rents." + horseSection + ".isOwnable");
 		  Horse.Color color = HorseUtils.parseColorFromString(horseFile.getString("Horse Rents." + horseSection + ".color"));
@@ -60,7 +60,7 @@ public class MountLoader {
 		  ItemStack armor = new ItemStack(armorMaterial, 1 );
 		  
 		  HorseMountBuilder builder = new HorseMountBuilder(name, speed, horseSection);
-		  HorseMount mount = builder.setRentTime(time).setArmorType(armor).setHorseType(type).setOwnable(isOwnable).setPrice(price).setColor(color).build();
+		  HorseMount mount = builder.setRentTime(time).setArmorType(armor).setOwnable(isOwnable).setPrice(price).setColor(color).build();
 		  
 		  horseMountAndSaddleMap.put(mount, createHorseSaddle(mount)); 
 		}
@@ -87,12 +87,12 @@ public class MountLoader {
 				"«" + ChatColor.AQUA + " Stat " + ChatColor.DARK_GRAY + "»" + ChatColor.DARK_GRAY  + ChatColor.STRIKETHROUGH + "----");
 		//add price
 		
-		String horseType = HorseUtils.getHorseType(mount.getHorseType());
-		String mountType = HorseUtils.getMountType(mount.getColor(), mount.getHorseType());
+	//	String horseType = HorseUtils.getHorseType(mount.getHorseType());
+	//	String mountType = HorseUtils.getMountType(mount.getColor(), mount.getHorseType());
 		
 		lore.add(ChatColor.GRAY + "Speed: " + ChatColor.GREEN + Integer.toString(mount.getSpeed()));
-		lore.add(ChatColor.GRAY + "Mount: " + ChatColor.GREEN  + horseType.toString().substring(0,1).toUpperCase() + horseType.toString().substring(1).toLowerCase());
-		lore.add(ChatColor.GRAY + "Type: " + ChatColor.GREEN + mountType.substring(0,1).toUpperCase() + mountType.substring(1).toLowerCase());
+	//	lore.add(ChatColor.GRAY + "Mount: " + ChatColor.GREEN  + horseType.toString().substring(0,1).toUpperCase() + horseType.toString().substring(1).toLowerCase());
+//		lore.add(ChatColor.GRAY + "Type: " + ChatColor.GREEN + mountType.substring(0,1).toUpperCase() + mountType.substring(1).toLowerCase());
 		
 	
 		

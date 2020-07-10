@@ -185,6 +185,9 @@ public class Mounts extends JavaPlugin {
                     dataMap.add((Map<?, ?>) f.get(null));
                 }
             }
+            
+            if(dataMap.isEmpty())
+            	return;
      
             if (dataMap.get(2).containsKey(id)){
                 dataMap.get(0).remove(name);

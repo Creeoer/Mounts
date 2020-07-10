@@ -57,7 +57,8 @@ public class HorseListener implements Listener{
 	@EventHandler
 	public void onHorseRide(VehicleEnterEvent event) {
 		if(event.getVehicle() instanceof Horse) {
-			EntityHorse horse = (EntityHorse) event.getVehicle();
+			CraftHorse craftHorse = (CraftHorse) event.getVehicle();
+			EntityHorse horse = craftHorse.getHandle();
 			if(horse instanceof MountEntity && event.getEntered() instanceof Player) {
 				String horseName = horse.getCustomName().getString();
 				String playerName = ((Player) event.getEntered()).getName();

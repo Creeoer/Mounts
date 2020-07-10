@@ -56,7 +56,7 @@ public class HorseMountBuilder {
 	}
 	
 	public HorseMount build() {
-		return new HorseMount(name, speed, id, price, rentTime, armor, horseType, isOwnable, color);
+		return new HorseMount(name, speed, id, price, rentTime, armor, isOwnable, color);
 	}
 
 }

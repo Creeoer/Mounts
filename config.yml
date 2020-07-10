@@ -3,7 +3,7 @@ Horse Rents:
         name: 'Sally'
         speed: 5
         price: 500
-        type: 'Donkey'
+        type: 'Horse'
         color: 'creamy'
         time: 3
         armor: 'iron'
