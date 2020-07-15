@@ -1,4 +1,4 @@
-package creeoer.plugins.mounts.objects;
+package creeoer.plugins.mounts.mysql;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,7 +16,7 @@ public class DatabaseWrapper extends PlayerManager {
     }
 
     @Override
-    void loadCurrentRenters() {
+    protected void loadCurrentRenters() {
 	new BukkitRunnable() {
 	    public void run() {
 		try {

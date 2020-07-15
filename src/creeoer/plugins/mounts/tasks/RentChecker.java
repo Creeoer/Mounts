@@ -1,4 +1,4 @@
-package creeoer.plugins.mounts.objects;
+package creeoer.plugins.mounts.tasks;
 
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +11,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 import creeoer.plugins.mounts.main.Commands;
 import creeoer.plugins.mounts.main.MountLoader;
 import creeoer.plugins.mounts.main.Mounts;
+import creeoer.plugins.mounts.mysql.PlayerManager;
+import creeoer.plugins.mounts.objects.HorseMount;
+import creeoer.plugins.mounts.objects.MountEntity;
 import net.md_5.bungee.api.ChatColor;
 
 public class RentChecker extends BukkitRunnable {

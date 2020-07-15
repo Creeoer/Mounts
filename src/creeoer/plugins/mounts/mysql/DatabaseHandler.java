@@ -1,4 +1,4 @@
-package creeoer.plugins.mounts.objects;
+package creeoer.plugins.mounts.mysql;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

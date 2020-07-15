@@ -18,9 +18,9 @@ import org.bukkit.entity.Horse;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import creeoer.plugins.mounts.mysql.PlayerManager;
 import creeoer.plugins.mounts.objects.HorseMount;
 import creeoer.plugins.mounts.objects.MountEntity;
-import creeoer.plugins.mounts.objects.PlayerManager;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_15_R1.EntityHorse;
 

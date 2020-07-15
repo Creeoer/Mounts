@@ -1,4 +1,4 @@
-package creeoer.plugins.mounts.objects;
+package creeoer.plugins.mounts.mysql;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -11,6 +11,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import creeoer.plugins.mounts.main.Mounts;
+import creeoer.plugins.mounts.objects.MountEntity;
 
 public class PlayerManager {
     HashMap<String, Long> currentRenters;
@@ -31,7 +32,7 @@ public class PlayerManager {
 
     }
 
-    void loadCurrentRenters() {
+    protected void loadCurrentRenters() {
 	new BukkitRunnable() {
 	    public void run() {
 		try {

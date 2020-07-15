@@ -14,9 +14,9 @@ import creeoer.plugins.mounts.main.Commands;
 import creeoer.plugins.mounts.main.HorseLoader;
 import creeoer.plugins.mounts.main.MountLoader;
 import creeoer.plugins.mounts.main.Mounts;
+import creeoer.plugins.mounts.mysql.PlayerManager;
 import creeoer.plugins.mounts.objects.HorseMount;
 import creeoer.plugins.mounts.objects.MountEntity;
-import creeoer.plugins.mounts.objects.PlayerManager;
 import net.md_5.bungee.api.ChatColor;
 import net.milkbowl.vault.economy.EconomyResponse;
 
