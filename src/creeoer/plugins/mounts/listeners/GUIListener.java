@@ -2,6 +2,7 @@ package creeoer.plugins.mounts.listeners;
 
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -35,11 +36,11 @@ public class GUIListener implements Listener {
     @EventHandler
     public void onGUIClick(InventoryClickEvent event) {
 	try {
-	    if (event.getClickedInventory() == null || event.getClickedInventory().getName() == null) {
+	    if (event.getView().getTitle() == null || event.getView().getTitle() == null) {
 		return;
 	    }
 
-	    if (event.getClickedInventory().getName().contains("Rent A Horse")) {
+	    if (event.getView().getTitle().contains("Rent A Horse")) {
 		event.setCancelled(true);
 
 		String playerName = event.getWhoClicked().getName();
@@ -47,18 +48,24 @@ public class GUIListener implements Listener {
 		ItemStack clickedItem = event.getCurrentItem();
 
 		if (clickedItem.getType() == Material.AIR) {
+		    main.getLogger().info("after clickedItem get type AIR");
 		    return;
 		}
+		main.getLogger().info("after clickedItem get type");
 
 		HorseMount mount = mountLoader.getMountFromItem(clickedItem);
 
-		if (mount == null)
+		if (mount == null) {
+		    Bukkit.broadcastMessage("null");
+		    main.getLogger().info("nuull on mount = null");
 		    return;
+		}
 
 		Player player = (Player) event.getWhoClicked();
 
-		EconomyResponse trans = main.economy.withdrawPlayer(player.getName(), mount.getPrice());
-
+		EconomyResponse trans = main.economy.withdrawPlayer(Bukkit.getOfflinePlayer(player.getUniqueId()),
+			mount.getPrice());
+		main.getLogger().info("after trans response");
 		if (!trans.transactionSuccess()) {
 		    player.closeInventory();
 		    player.sendMessage(
@@ -94,11 +101,11 @@ public class GUIListener implements Listener {
     @EventHandler
     public void onUnrentGUIClick(InventoryClickEvent event) {
 	try {
-	    if (event.getClickedInventory().getTitle() == null) {
+	    if (event.getView().getTitle() == null) {
 		return;
 	    }
 
-	    if (event.getClickedInventory().getName().contains("Unrent Your Horse")) {
+	    if (event.getView().getTitle().contains("Unrent Your Horse")) {
 		event.setCancelled(true);
 
 		if (event.getCurrentItem() == null) {
@@ -111,8 +118,8 @@ public class GUIListener implements Listener {
 		    player.sendMessage(Commands.MOUNT_PREFIX + ChatColor.RED + "Unrenting cancelled");
 		} else if (event.getCurrentItem().getType() == Material.POISONOUS_POTATO) {
 		    HorseMount mount = null;
-
 		    MountEntity horse = null;
+
 		    List<MountEntity> mounts = playerManager.getPlayerHorsesInWorld(player.getName());
 		    for (MountEntity entity : mounts) {
 			HorseMount mountType = main.retrieveHorseMountType(entity.getUniqueID());
@@ -123,7 +130,7 @@ public class GUIListener implements Listener {
 			}
 		    }
 
-		    Mounts.economy.depositPlayer(player.getName(), mount.getPrice() / 2);
+		    Mounts.economy.depositPlayer(Bukkit.getOfflinePlayer(player.getUniqueId()), mount.getPrice() / 2);
 		    playerManager.removeHorseEntity(horse);
 		    playerManager.removeRenter(player.getName());
 

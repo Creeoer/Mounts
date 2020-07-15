@@ -11,15 +11,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
-import org.bukkit.inventory.ItemStack;
 
 import creeoer.plugins.mounts.main.Commands;
-import creeoer.plugins.mounts.main.MountLoader;
 import creeoer.plugins.mounts.main.Mounts;
 import creeoer.plugins.mounts.main.UnrentGUI;
 import creeoer.plugins.mounts.objects.HorseMount;
@@ -32,12 +29,11 @@ public class HorseListener implements Listener {
     private PlayerManager playerManager;
     private ReturnHorseTask task;
     private Mounts main;
-    private MountLoader mountLoader;
 
     public HorseListener(Mounts main) {
 	this.main = main;
 	playerManager = main.getPlayerManager();
-	mountLoader = main.getMountLoader();
+
     }
 
     @EventHandler
@@ -69,20 +65,6 @@ public class HorseListener implements Listener {
 	if (event.getEntity() instanceof Player && event.getEntity().getVehicle() != null
 		&& event.getEntity().getVehicle() instanceof Horse) {
 	    event.getEntity().getVehicle().eject();
-	}
-    }
-
-    @EventHandler
-    public void onPlayerTeleport(EntityTeleportEvent event) {
-	if (event.getEntity() instanceof Horse) {
-	    EntityHorse horse = (EntityHorse) event.getEntity();
-	    if (horse instanceof MountEntity && horse.getBukkitEntity().getPassenger() != null
-		    && horse.getBukkitEntity().getPassenger() instanceof Player) {
-
-		HorseMount mountType = main.retrieveHorseMountType(horse.getUniqueID());
-		ItemStack saddle = mountLoader.getHorseMountAndSaddleMap().get(mountType);
-
-	    }
 	}
     }
 

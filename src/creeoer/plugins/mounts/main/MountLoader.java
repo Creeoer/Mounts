@@ -26,7 +26,7 @@ public class MountLoader {
 
     public MountLoader(Mounts pluginInstance) {
 	main = pluginInstance;
-	horseFile = (YamlConfiguration) pluginInstance.getConfig();
+	horseFile = (YamlConfiguration) pluginInstance.getConfigFile();
 
 	loadHorseMountsAndCreateSaddles();
     }

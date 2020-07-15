@@ -6,6 +6,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ import creeoer.plugins.mounts.listeners.GUIListener;
 import creeoer.plugins.mounts.listeners.HorseListener;
 import creeoer.plugins.mounts.listeners.SaddleListener;
 import creeoer.plugins.mounts.objects.DatabaseHandler;
+import creeoer.plugins.mounts.objects.DatabaseWrapper;
 import creeoer.plugins.mounts.objects.HorseMount;
 import creeoer.plugins.mounts.objects.MountEntity;
 import creeoer.plugins.mounts.objects.PlayerManager;
@@ -51,18 +53,43 @@ public class Mounts extends JavaPlugin {
 
     @Override
     public void onEnable() {
-	if (!getDataFolder().exists()) {
-	    getDataFolder().mkdir();
-	    saveDefaultConfig();
-	    createPlayersFile();
-	    createCurrentHorsesFile();
-	}
 
+	if (!getDataFolder().exists())
+	    createDataFolder();
+
+	setupEconomy();
 	currentHorsesInWorld = new HashMap<>();
 	horseEntitiesInWorld = new HashSet<>();
-
 	configFile = YamlConfiguration.loadConfiguration(new File(getDataFolder() + File.separator + "config.yml"));
+	initDataMethod();
+	registerEntity("Horse", 100, EntityHorse.class, MountEntity.class);
+	horseLoader = new HorseLoader(this);
 
+	mountLoader = new MountLoader(this);
+	if (usemysql) {
+	    playerManager = new DatabaseWrapper(this);
+	} else {
+	    playerManager = new PlayerManager(this);
+	}
+	getCommand("mount").setExecutor(new Commands(this));
+	registerListeners();
+	new RentChecker(this).runTaskTimer(this, 40L, 100L);
+
+	deserealizeAndSpawnEntities();
+    }
+
+    @Override
+    public void onDisable() {
+	serealizeAllMountEntites();
+	if (usemysql)
+	    handler.closeConnection();
+
+    }
+
+    /**
+     * Determines whether or not to use mysql or flat file storage
+     */
+    private void initDataMethod() {
 	if (configFile.getBoolean("Database Settings.usemysql")) {
 	    usemysql = true;
 	    handler = new DatabaseHandler(this);
@@ -72,27 +99,13 @@ public class Mounts extends JavaPlugin {
 	    playersFile = YamlConfiguration
 		    .loadConfiguration(new File(getDataFolder() + File.separator + "players.yml"));
 	}
-
-	registerEntity("Horse", 100, EntityHorse.class, MountEntity.class);
-	horseLoader = new HorseLoader(this);
-
-	mountLoader = new MountLoader(this);
-	playerManager = new PlayerManager(this);
-	getCommand("mount").setExecutor(new Commands(this));
-	registerListeners();
-	new RentChecker(this).runTaskTimer(this, 40L, 100L);
-
-	setupEconomy();
-
-	deserealizeAndSpawnEntities();
     }
 
-    @Override
-    public void onDisable() {
-	serealizeAllMountEntites();
-	if (usemysql) {
-	    handler.closeConnection();
-	}
+    private void createDataFolder() {
+	getDataFolder().mkdir();
+	saveDefaultConfig();
+	createPlayersFile();
+	createCurrentHorsesFile();
     }
 
     public DatabaseHandler getDatabaseHandler() {
@@ -228,35 +241,44 @@ public class Mounts extends JavaPlugin {
 		Statement statement = conn.createStatement();
 		ResultSet set = statement.executeQuery("SELECT * FROM horses");
 
-		while (set.next()) {
-		    loc = new Location(getServer().getWorld(set.getString(2)), set.getDouble(3), set.getDouble(4),
-			    set.getDouble(5), set.getFloat(6), set.getFloat(7));
-		    mount = mountLoader.getMountFromID(set.getString(8));
-		    ownerName = set.getString(9);
-		    horseLoader.loadHorseIntoWorld(loc, mount, ownerName);
-		    statement.executeUpdate("DELETE FROM horses WHERE horseNumber = '" + set.getInt(0) + "'");
+		deleteEntityDataFromTable(statement, set);
+
+	    } else {
+
+		if (currentHorsesFile.getConfigurationSection("Horses") == null
+			|| currentHorsesFile.getConfigurationSection("Horses").getKeys(false) == null) {
+		    return;
 		}
-	    }
+		for (String entry : currentHorsesFile.getConfigurationSection("Horses").getKeys(false)) {
+		    loc = (Location) currentHorsesFile.get("Horses." + entry + ".location");
+		    mount = mountLoader.getMountFromID(currentHorsesFile.getString("Horses." + entry + ".id"));
+		    ownerName = currentHorsesFile.getString("Horses." + entry + ".owner");
 
-	    if (currentHorsesFile.getConfigurationSection("Horses") == null
-		    || currentHorsesFile.getConfigurationSection("Horses").getKeys(false) == null) {
-		return;
-	    }
-	    for (String entry : currentHorsesFile.getConfigurationSection("Horses").getKeys(false)) {
-		loc = (Location) currentHorsesFile.get("Horses." + entry + ".location");
-		mount = mountLoader.getMountFromID(currentHorsesFile.getString("Horses." + entry + ".id"));
-		ownerName = currentHorsesFile.getString("Horses." + entry + ".owner");
+		    horseLoader.loadHorseIntoWorld(loc, mount, ownerName);
+		    currentHorsesFile.set("Horses." + entry, null);
+		}
 
-		horseLoader.loadHorseIntoWorld(loc, mount, ownerName);
-		currentHorsesFile.set("Horses." + entry, null);
+		currentHorsesFile.save(new File(getDataFolder() + File.separator + "horses.yml"));
 	    }
-
-	    currentHorsesFile.save(new File(getDataFolder() + File.separator + "horses.yml"));
 	} catch (Exception e) {
 	    getLogger().severe("There was a problem loading the horses");
 	}
 
 	getLogger().info("Successfully loaded all player horses");
+    }
+
+    private void deleteEntityDataFromTable(Statement statement, ResultSet set) throws SQLException {
+	Location loc;
+	HorseMount mount;
+	String ownerName;
+	while (set.next()) {
+	    loc = new Location(getServer().getWorld(set.getString(2)), set.getDouble(3), set.getDouble(4),
+		    set.getDouble(5), set.getFloat(6), set.getFloat(7));
+	    mount = mountLoader.getMountFromID(set.getString(8));
+	    ownerName = set.getString(9);
+	    horseLoader.loadHorseIntoWorld(loc, mount, ownerName);
+	    statement.executeUpdate("DELETE FROM horses WHERE horseNumber = '" + set.getInt(0) + "'");
+	}
     }
 
     private void serealizeMountEntity(MountEntity mount) {
@@ -276,10 +298,12 @@ public class Mounts extends JavaPlugin {
 		Connection conn = handler.getConnection();
 		Statement statement = conn.createStatement();
 
-		statement.executeUpdate("INSERT INTO horses (id, world, x, y, z, yaw, pitch, id, owner VALUES (" + "'"
-			+ entityAmount + "'" + ", " + "'" + loc.getWorld() + "'" + ", " + "'" + loc.getX() + "', " + "'"
-			+ loc.getY() + "', " + "'" + loc.getZ() + "', " + "'" + loc.getPitch() + "', " + "'"
-			+ loc.getYaw() + "', " + "'" + id + "', " + "'" + ownerName + "'");
+		statement.executeUpdate(
+			"INSERT INTO horses (horseNumber, world, x, y, z, yaw, pitch, id, owner) VALUES (" + "'"
+				+ entityAmount + "'" + ", " + "'" + loc.getWorld().getName() + "'" + ", " + "'"
+				+ loc.getX() + "', " + "'" + loc.getY() + "', " + "'" + loc.getZ() + "', " + "'"
+				+ loc.getYaw() + "', " + "'" + loc.getPitch() + "', " + "'" + id + "', " + "'"
+				+ ownerName + "')");
 		return;
 	    }
 

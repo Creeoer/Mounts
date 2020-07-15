@@ -27,7 +27,7 @@ public class DatabaseHandler {
 	    }
 	} catch (SQLException e) {
 	    attemptConnection();
-	    e.printStackTrace();
+	    main.getLogger().severe("There is a problem with connecting to the MySQL server!");
 	}
     }
 
@@ -64,6 +64,17 @@ public class DatabaseHandler {
 	    }
 	} catch (SQLException e) {
 	    e.printStackTrace();
+	}
+    }
+
+    public Statement getStatement() {
+	try {
+	    return connection.createStatement();
+	} catch (SQLException e) {
+	    e.printStackTrace();
+	    main.getLogger().severe("Problem with MySQL connectivity!");
+	    return null;
+
 	}
     }
 

@@ -1,10 +1,6 @@
 package creeoer.plugins.mounts.objects;
 
 import java.io.File;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,19 +8,17 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Horse;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import creeoer.plugins.mounts.main.Mounts;
-import net.minecraft.server.v1_15_R1.EntityHorse;
 
 public class PlayerManager {
-    private HashMap<String, Long> currentRenters;
-    private YamlConfiguration playersFile;
-    private Mounts main;
-    private List<UUID> deletionQueue;
-    private boolean usingSql;
-    private DatabaseHandler handler;
+    HashMap<String, Long> currentRenters;
+    YamlConfiguration playersFile;
+    Mounts main;
+    List<UUID> deletionQueue;
+    boolean usingSql;
+    DatabaseHandler handler;
 
     public PlayerManager(Mounts pluginInstance) {
 	main = pluginInstance;
@@ -33,36 +27,19 @@ public class PlayerManager {
 	currentRenters = new HashMap<>();
 	deletionQueue = new ArrayList<>();
 	handler = main.getDatabaseHandler();
-
 	loadCurrentRenters();
 
     }
 
-    private void loadCurrentRenters() {
+    void loadCurrentRenters() {
 	new BukkitRunnable() {
 	    public void run() {
-		if (usingSql) {
-		    Connection conn = handler.getConnection();
-		    Statement statement;
-		    try {
-			statement = conn.createStatement();
-			ResultSet playerEntries = statement.executeQuery("SELECT playerName, timeBought FROM renters");
-
-			while (playerEntries.next()) {
-			    currentRenters.put(playerEntries.getString(1), playerEntries.getLong(2));
-			}
-		    } catch (SQLException e) {
-			e.printStackTrace();
-		    }
-		    return;
-		}
-
 		try {
-		    for (String playerEntry : playersFile.getConfigurationSection("Players").getKeys(false)) {
+		    for (String playerEntry : playersFile.getConfigurationSection("Players").getKeys(false))
 			currentRenters.put(playerEntry, playersFile.getLong("Players." + playerEntry + ".timeBought"));
-		    }
-		} catch (NullPointerException e) {
 
+		} catch (Exception e) {
+		    e.printStackTrace();
 		}
 	    }
 	}.runTaskAsynchronously(main);
@@ -87,17 +64,11 @@ public class PlayerManager {
 		long timeBought = System.currentTimeMillis();
 
 		try {
-		    if (usingSql) {
-			Connection conn = handler.getConnection();
-			Statement statement;
-			statement = conn.createStatement();
-			statement.executeUpdate("INSERT INTO renters (playerName, horseID, timeBought) VALUES (" + " '"
-				+ horseID + "' " + ", " + " '" + timeBought + "')");
-		    } else {
-			playersFile.set("Players." + playerName + ".horseID", horseID);
-			playersFile.set("Players." + playerName + ".timeBought", System.currentTimeMillis());
-			playersFile.save(new File(main.getDataFolder() + File.separator + "players.yml"));
-		    }
+
+		    playersFile.set("Players." + playerName + ".horseID", horseID);
+		    playersFile.set("Players." + playerName + ".timeBought", timeBought);
+		    playersFile.save(new File(main.getDataFolder() + File.separator + "players.yml"));
+
 		} catch (Exception e) {
 		    e.printStackTrace();
 		}
@@ -111,10 +82,7 @@ public class PlayerManager {
 	main.removeHorseFromRegisterAndSet(entity);
 	deletionQueue.add(entity.getUniqueID());
 
-	EntityHorse horse = entity;
-	Horse buukkitHorse = (Horse) horse.getBukkitEntity();
-
-	buukkitHorse.remove();
+	entity.getBukkitEntity().remove();
     }
 
     public List<UUID> getHorsesToBeDeleted() {
@@ -143,16 +111,10 @@ public class PlayerManager {
 	new BukkitRunnable() {
 	    public void run() {
 		try {
-		    if (usingSql) {
-			Connection conn = handler.getConnection();
-			Statement statement;
-			statement = conn.createStatement();
-			statement.executeUpdate("DELETE FROM renters WHERE playerName = '" + playerName + " ' ");
-		    } else {
-			playersFile.set("Players." + playerName, null);
 
-			playersFile.save(new File(main.getDataFolder() + File.separator + "players.yml"));
-		    }
+		    playersFile.set("Players." + playerName, null);
+		    playersFile.save(new File(main.getDataFolder() + File.separator + "players.yml"));
+
 		} catch (Exception e) {
 		    e.printStackTrace();
 		}
@@ -163,18 +125,6 @@ public class PlayerManager {
     }
 
     public String getPlayerHorseID(String playerName) {
-	if (usingSql) {
-	    Connection conn = handler.getConnection();
-	    Statement statement;
-	    try {
-		statement = conn.createStatement();
-		ResultSet set = statement
-			.executeQuery("SELECT horseID from renters WHERE playerName = '" + playerName + "'");
-		return set.toString();
-	    } catch (SQLException e) {
-		e.printStackTrace();
-	    }
-	}
 
 	for (String playerEntries : playersFile.getConfigurationSection("Players").getKeys(false)) {
 	    if (playerEntries.equals(playerName)) {

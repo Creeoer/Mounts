@@ -21,7 +21,6 @@ public class HorseLoader {
 	Horse horse = MountEntity.spawn(loc, mount.getSpeed(), ownerName, mount);
 
 	horse.getInventory().setSaddle(new ItemStack(Material.SADDLE));
-	horse.setVariant(mount.getHorseType());
 	horse.getInventory().setArmor(mount.getArmor());
 	horse.setColor(mount.getColor());
 
