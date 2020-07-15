@@ -1,179 +1,190 @@
 package creeoer.plugins.mounts.objects;
 
 import java.io.File;
-import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Chunk;
-import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
-
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Horse;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import creeoer.plugins.mounts.main.Mounts;
 import net.minecraft.server.v1_15_R1.EntityHorse;
 
 public class PlayerManager {
-	
-	private Set<String> currentRenters;
-	private YamlConfiguration playersFile;
-	private Mounts main;
-	private List<UUID> deletionQueue;
+    private HashMap<String, Long> currentRenters;
+    private YamlConfiguration playersFile;
+    private Mounts main;
+    private List<UUID> deletionQueue;
+    private boolean usingSql;
+    private DatabaseHandler handler;
 
-	
-	
-	/*
-	 * playerName:
-	 *    timeBought: 
-	 *    horseID: 
-	 */
-	
-	//do not instiainate this 
-	public PlayerManager(Mounts pluginInstance) {
-		main = pluginInstance;
-		playersFile = pluginInstance.getPlayersFile();
-		currentRenters = new HashSet<>();
-		deletionQueue = new ArrayList<>();
+    public PlayerManager(Mounts pluginInstance) {
+	main = pluginInstance;
+	usingSql = main.usemysql;
 
-		loadCurrentOwners();
-		//load players & load horses in world
-		
-	}
-	
-	//create method to add all owners from file
-	
-	//this class handles managing what players own what horse
-	
-	
-	
-	
-	private void loadCurrentOwners() {
-		
-	try {
-		for(String playerEntry: playersFile.getConfigurationSection("Players").getKeys(false)) {
-			 currentRenters.add(playerEntry);
-		}		
-	} catch (NullPointerException e) {}
-		
-	}
-	
-	public Set<String> getCurrentRenters() {
-		return currentRenters;
-	}
-	
-	public long getTimeBought(String renterName) {
-		for(String playerEntries: playersFile.getConfigurationSection("Players").getKeys(false)) {
-			if(playerEntries.equals(renterName)) {
-				long timeBought = playersFile.getLong("Players." + renterName + ".timeBought");
-				return timeBought;
+	currentRenters = new HashMap<>();
+	deletionQueue = new ArrayList<>();
+	handler = main.getDatabaseHandler();
+
+	loadCurrentRenters();
+
+    }
+
+    private void loadCurrentRenters() {
+	new BukkitRunnable() {
+	    public void run() {
+		if (usingSql) {
+		    Connection conn = handler.getConnection();
+		    Statement statement;
+		    try {
+			statement = conn.createStatement();
+			ResultSet playerEntries = statement.executeQuery("SELECT playerName, timeBought FROM renters");
+
+			while (playerEntries.next()) {
+			    currentRenters.put(playerEntries.getString(1), playerEntries.getLong(2));
 			}
-			
-		}
-		return 0;
-	}
-	
-	
-	public void addRenter(String playerName, String horseID) {
-		
-		playersFile.set("Players." + playerName + ".horseID", horseID );
-		playersFile.set("Players." + playerName + ".timeBought", System.currentTimeMillis());
-		try {
-			playersFile.save(new File(main.getDataFolder() + File.separator + "players.yml"));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
+		    } catch (SQLException e) {
 			e.printStackTrace();
+		    }
+		    return;
 		}
-		
-		currentRenters.add(playerName);
-	
-	}
-	
-	public void removeHorseEntity(MountEntity entity, String ownerName) 
-	{
-				
-		main.removeHorseRegister(entity.getUniqueID());
-		main.removeHorseFromHorseSet(entity);
-		deletionQueue.add(entity.getUniqueID());
-		
-		EntityHorse horse = (EntityHorse) entity;
-		Horse buukkitHorse = (Horse) horse.getBukkitEntity();
 
-		
-		buukkitHorse.remove();
-	
+		try {
+		    for (String playerEntry : playersFile.getConfigurationSection("Players").getKeys(false)) {
+			currentRenters.put(playerEntry, playersFile.getLong("Players." + playerEntry + ".timeBought"));
+		    }
+		} catch (NullPointerException e) {
 
+		}
+	    }
+	}.runTaskAsynchronously(main);
+
+    }
+
+    public Set<String> getCurrentRenters() {
+	return currentRenters.keySet();
+    }
+
+    public long getTimeBought(String renterName) {
+	if (currentRenters.get(renterName) != null) {
+	    return currentRenters.get(renterName);
 	}
-	
-	public List<UUID> getHorsesToBeDeleted(){
-		return deletionQueue;
-	}
-	
-	public List<MountEntity> getPlayerHorsesInWorld(String playerName) {
+
+	return 0;
+    }
+
+    public void addRenter(String playerName, String horseID) {
+	new BukkitRunnable() {
+	    public void run() {
+		long timeBought = System.currentTimeMillis();
+
+		try {
+		    if (usingSql) {
+			Connection conn = handler.getConnection();
+			Statement statement;
+			statement = conn.createStatement();
+			statement.executeUpdate("INSERT INTO renters (playerName, horseID, timeBought) VALUES (" + " '"
+				+ horseID + "' " + ", " + " '" + timeBought + "')");
+		    } else {
+			playersFile.set("Players." + playerName + ".horseID", horseID);
+			playersFile.set("Players." + playerName + ".timeBought", System.currentTimeMillis());
+			playersFile.save(new File(main.getDataFolder() + File.separator + "players.yml"));
+		    }
+		} catch (Exception e) {
+		    e.printStackTrace();
+		}
+		currentRenters.put(playerName, timeBought);
+	    }
+	}.runTaskAsynchronously(main);
+
+    }
+
+    public void removeHorseEntity(MountEntity entity) {
+	main.removeHorseFromRegisterAndSet(entity);
+	deletionQueue.add(entity.getUniqueID());
+
+	EntityHorse horse = entity;
+	Horse buukkitHorse = (Horse) horse.getBukkitEntity();
+
+	buukkitHorse.remove();
+    }
+
+    public List<UUID> getHorsesToBeDeleted() {
+	return deletionQueue;
+    }
+
+    public List<MountEntity> getPlayerHorsesInWorld(String playerName) {
 	List<MountEntity> mountEntites = new ArrayList<>();
-	
-		for (MountEntity entity: main.getHorseEntitiesInWorld()) {
-	     		String horseName = entity.getCustomName().getString();
-				String horsePlayerName = playerName + "'s" + " Horse";
-					
-					if(horseName.equals(horsePlayerName)) 
-						mountEntites.add(entity);
-				
-			}
-		return mountEntites;
+
+	for (MountEntity entity : main.getHorseEntitiesInWorld()) {
+	    String horseName = entity.getCustomName().getString();
+	    String horsePlayerName = playerName + "'s" + " Horse";
+
+	    if (horseName.equals(horsePlayerName)) {
+		mountEntites.add(entity);
+	    }
 	}
-	
-	
-	public boolean isRenting(String playerName) {
-		
-		if(currentRenters.contains(playerName))
-			return true;
-		
-		return false;
-	}
-	
-	
-	public void removeRenter(String playerName) {
-		playersFile.set("Players." + playerName, null);
+	return mountEntites;
+    }
+
+    public boolean isRenting(String playerName) {
+	return currentRenters.containsKey(playerName);
+    }
+
+    public void removeRenter(String playerName) {
+	new BukkitRunnable() {
+	    public void run() {
 		try {
+		    if (usingSql) {
+			Connection conn = handler.getConnection();
+			Statement statement;
+			statement = conn.createStatement();
+			statement.executeUpdate("DELETE FROM renters WHERE playerName = '" + playerName + " ' ");
+		    } else {
+			playersFile.set("Players." + playerName, null);
+
 			playersFile.save(new File(main.getDataFolder() + File.separator + "players.yml"));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		    }
+		} catch (Exception e) {
+		    e.printStackTrace();
 		}
+
 		currentRenters.remove(playerName);
-		
-	}
-	
-	
-	public String getPlayerHorseID(String playerName) {
-		
-		for(String playerEntries: playersFile.getConfigurationSection("Players").getKeys(false)) {
-			if(playerEntries.equals(playerName)) {
-				String id = playersFile.getString("Players." + playerName + ".horseID");
-				return id;
-			}
-			
-		}
-		return null;
-		
+	    }
+	}.runTaskAsynchronously(main);
+    }
+
+    public String getPlayerHorseID(String playerName) {
+	if (usingSql) {
+	    Connection conn = handler.getConnection();
+	    Statement statement;
+	    try {
+		statement = conn.createStatement();
+		ResultSet set = statement
+			.executeQuery("SELECT horseID from renters WHERE playerName = '" + playerName + "'");
+		return set.toString();
+	    } catch (SQLException e) {
+		e.printStackTrace();
+	    }
 	}
 
-	public void removeHorseFromQueue(UUID horseID) {
-		deletionQueue.remove(horseID);
-		
+	for (String playerEntries : playersFile.getConfigurationSection("Players").getKeys(false)) {
+	    if (playerEntries.equals(playerName)) {
+		return playersFile.getString("Players." + playerName + ".horseID");
+	    }
 	}
-	
-	
-	
-	
+	return null;
+    }
 
-	
+    public void removeHorseFromQueue(UUID horseID) {
+	deletionQueue.remove(horseID);
+    }
 }

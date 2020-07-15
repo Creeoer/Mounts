@@ -1,5 +1,5 @@
 Horse Rents:
-      rent1:
+    rent1:
         name: 'Sally'
         speed: 5
         price: 500
@@ -8,7 +8,7 @@ Horse Rents:
         time: 3
         armor: 'iron'
         isOwnable: false     
-      rent2:
+    rent2:
         name: 'Bobby'
         speed: 3
         price: 1000
@@ -17,6 +17,15 @@ Horse Rents:
         time: 10
         armor: 'iron'
         isOwnable: false
+
+#This will store all instances of horses in the world
+Database Settings:
+   usemysql: false
+   host: 'localhost'
+   port: 3306
+   databaseName: classicModels
+   user: root
+   pass: root
         
         
 #Notes: the time value is in minutes 
