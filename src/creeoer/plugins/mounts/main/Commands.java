@@ -31,12 +31,12 @@ public class Commands implements CommandExecutor {
     public static final String MOUNT_PREFIX = ChatColor.DARK_GRAY + "[" + ChatColor.BLUE + "Mounts"
 	    + ChatColor.DARK_GRAY + "]" + " ";
     private PlayerManager playerManager;
-    private MountLoader mountLoader;
+    private SaddleHandler saddleHandler;
 
     public Commands(Mounts pluginInstance) {
 	main = pluginInstance;
 	playerManager = main.getPlayerManager();
-	mountLoader = main.getMountLoader();
+	saddleHandler = main.getSaddleHandler();
     }
 
     @Override
@@ -115,7 +115,7 @@ public class Commands implements CommandExecutor {
 		    return false;
 		}
 
-		ItemStack saddle = mountLoader.getHorseMountAndSaddleMap().get(mountType);
+		ItemStack saddle = saddleHandler.getHorseMountAndSaddleMap().get(mountType);
 		saddle.setType(Material.SADDLE);
 		playerManager.removeHorseEntity(playerMount);
 
@@ -134,7 +134,7 @@ public class Commands implements CommandExecutor {
 		    return false;
 		}
 
-		HorseMount mount = mountLoader.getMountFromID(args[1]);
+		HorseMount mount = saddleHandler.getMountFromID(args[1]);
 
 		if (mount == null) {
 		    sender.sendMessage(MOUNT_PREFIX + ChatColor.RED + "This horse type does not exist!");
@@ -150,7 +150,7 @@ public class Commands implements CommandExecutor {
 		}
 
 		Player player = Bukkit.getPlayer(args[2]);
-		ItemStack stack = mountLoader.getHorseMountAndSaddleMap().get(mount);
+		ItemStack stack = saddleHandler.getHorseMountAndSaddleMap().get(mount);
 		stack.setType(Material.SADDLE);
 
 		player.getInventory().addItem(stack);
@@ -164,8 +164,6 @@ public class Commands implements CommandExecutor {
 		    sender.sendMessage(MOUNT_PREFIX + ChatColor.RED + "Not enough arguements!");
 		    return false;
 		}
-
-		String playerName = args[1];
 
 		List<MountEntity> mounts = playerManager.getPlayerHorsesInWorld(sender.getName());
 

@@ -33,7 +33,6 @@ public class HorseListener implements Listener {
     public HorseListener(Mounts main) {
 	this.main = main;
 	playerManager = main.getPlayerManager();
-
     }
 
     @EventHandler
@@ -137,7 +136,6 @@ public class HorseListener implements Listener {
 			}
 		    }
 		}
-
 	    }
 	}
     }
