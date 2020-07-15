@@ -4,10 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,7 +36,7 @@ import net.minecraft.server.v1_15_R1.EntityTypes;
 public class Mounts extends JavaPlugin {
     private YamlConfiguration configFile;
     private YamlConfiguration playersFile;
-    private MountLoader mountLoader;
+    private SaddleHandler saddleHandler;
     private PlayerManager playerManager;
     private YamlConfiguration currentHorsesFile;
     private static HashMap<UUID, HorseMount> currentHorsesInWorld;
@@ -48,14 +44,14 @@ public class Mounts extends JavaPlugin {
     private DatabaseHandler handler;
     private HorseLoader horseLoader;
     public static Economy economy;
-    private static int entityAmount;
+    public static int entityAmount;
     public boolean usemysql;
 
     @Override
     public void onEnable() {
-
-	if (!getDataFolder().exists())
+	if (!getDataFolder().exists()) {
 	    createDataFolder();
+	}
 
 	setupEconomy();
 	currentHorsesInWorld = new HashMap<>();
@@ -65,7 +61,8 @@ public class Mounts extends JavaPlugin {
 	registerEntity("Horse", 100, EntityHorse.class, MountEntity.class);
 	horseLoader = new HorseLoader(this);
 
-	mountLoader = new MountLoader(this);
+	saddleHandler = new SaddleHandler(this);
+
 	if (usemysql) {
 	    playerManager = new DatabaseWrapper(this);
 	} else {
@@ -75,25 +72,25 @@ public class Mounts extends JavaPlugin {
 	registerListeners();
 	new RentChecker(this).runTaskTimer(this, 40L, 100L);
 
-	deserealizeAndSpawnEntities();
+	playerManager.deserealizeAndSpawnMountEntities();
+	getLogger().info("Successfully loaded Mounts!");
     }
 
     @Override
     public void onDisable() {
 	serealizeAllMountEntites();
-	if (usemysql)
+	if (usemysql) {
 	    handler.closeConnection();
-
+	}
     }
 
-    /**
-     * Determines whether or not to use mysql or flat file storage
-     */
+    /** Determines whether or not to use mysql or flat file storage. */
     private void initDataMethod() {
 	if (configFile.getBoolean("Database Settings.usemysql")) {
 	    usemysql = true;
 	    handler = new DatabaseHandler(this);
 	} else {
+	    usemysql = false;
 	    currentHorsesFile = YamlConfiguration
 		    .loadConfiguration(new File(getDataFolder() + File.separator + "horses.yml"));
 	    playersFile = YamlConfiguration
@@ -116,8 +113,8 @@ public class Mounts extends JavaPlugin {
 	return configFile;
     }
 
-    public MountLoader getMountLoader() {
-	return mountLoader;
+    public SaddleHandler getSaddleHandler() {
+	return saddleHandler;
     }
 
     public PlayerManager getPlayerManager() {
@@ -145,8 +142,8 @@ public class Mounts extends JavaPlugin {
 
     public void reloadConfigAndMounts() {
 	reloadConfig();
-	mountLoader.reloadHorseFile();
-	mountLoader.loadHorseMountsAndCreateSaddles();
+	saddleHandler.reloadHorseFile();
+	saddleHandler.loadHorseMountsAndCreateSaddles();
     }
 
     private void createPlayersFile() {
@@ -230,91 +227,14 @@ public class Mounts extends JavaPlugin {
 	getLogger().info("Successfully saved all of the current horses");
     }
 
-    private void deserealizeAndSpawnEntities() {
-	try {
-	    Location loc;
-	    HorseMount mount;
-	    String ownerName;
-
-	    if (usemysql) {
-		Connection conn = handler.getConnection();
-		Statement statement = conn.createStatement();
-		ResultSet set = statement.executeQuery("SELECT * FROM horses");
-
-		deleteEntityDataFromTable(statement, set);
-
-	    } else {
-
-		if (currentHorsesFile.getConfigurationSection("Horses") == null
-			|| currentHorsesFile.getConfigurationSection("Horses").getKeys(false) == null) {
-		    return;
-		}
-		for (String entry : currentHorsesFile.getConfigurationSection("Horses").getKeys(false)) {
-		    loc = (Location) currentHorsesFile.get("Horses." + entry + ".location");
-		    mount = mountLoader.getMountFromID(currentHorsesFile.getString("Horses." + entry + ".id"));
-		    ownerName = currentHorsesFile.getString("Horses." + entry + ".owner");
-
-		    horseLoader.loadHorseIntoWorld(loc, mount, ownerName);
-		    currentHorsesFile.set("Horses." + entry, null);
-		}
-
-		currentHorsesFile.save(new File(getDataFolder() + File.separator + "horses.yml"));
-	    }
-	} catch (Exception e) {
-	    getLogger().severe("There was a problem loading the horses");
-	}
-
-	getLogger().info("Successfully loaded all player horses");
-    }
-
-    private void deleteEntityDataFromTable(Statement statement, ResultSet set) throws SQLException {
-	Location loc;
-	HorseMount mount;
-	String ownerName;
-	while (set.next()) {
-	    loc = new Location(getServer().getWorld(set.getString(2)), set.getDouble(3), set.getDouble(4),
-		    set.getDouble(5), set.getFloat(6), set.getFloat(7));
-	    mount = mountLoader.getMountFromID(set.getString(8));
-	    ownerName = set.getString(9);
-	    horseLoader.loadHorseIntoWorld(loc, mount, ownerName);
-	    statement.executeUpdate("DELETE FROM horses WHERE horseNumber = '" + set.getInt(0) + "'");
-	}
-    }
-
     private void serealizeMountEntity(MountEntity mount) {
-	// save location, owner, and type
-	// number:
-	// location:
-	// owner:
-	// id:
 	String ownerName = mount.getCustomName().getString().replace("'s Horse", "");
 	Location loc = mount.getBukkitEntity().getLocation();
 
 	HorseMount mountType = retrieveHorseMountType(mount.getUniqueID());
 	String id = mountType.getID();
 
-	try {
-	    if (usemysql) {
-		Connection conn = handler.getConnection();
-		Statement statement = conn.createStatement();
-
-		statement.executeUpdate(
-			"INSERT INTO horses (horseNumber, world, x, y, z, yaw, pitch, id, owner) VALUES (" + "'"
-				+ entityAmount + "'" + ", " + "'" + loc.getWorld().getName() + "'" + ", " + "'"
-				+ loc.getX() + "', " + "'" + loc.getY() + "', " + "'" + loc.getZ() + "', " + "'"
-				+ loc.getYaw() + "', " + "'" + loc.getPitch() + "', " + "'" + id + "', " + "'"
-				+ ownerName + "')");
-		return;
-	    }
-
-	    currentHorsesFile.set("Horses." + entityAmount + ".location", loc);
-	    currentHorsesFile.set("Horses." + entityAmount + ".id", id);
-	    currentHorsesFile.set("Horses." + entityAmount + ".owner", ownerName);
-
-	    currentHorsesFile.save(new File(getDataFolder() + File.separator + "horses.yml"));
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
+	playerManager.serealizeMountEntity(ownerName, loc, id);
     }
 
     public void registerHorseInWorld(UUID horseUUID, HorseMount mountType) {

@@ -9,7 +9,6 @@ import creeoer.plugins.mounts.objects.HorseMount;
 import creeoer.plugins.mounts.objects.MountEntity;
 
 public class HorseLoader {
-
     private Mounts main;
 
     public HorseLoader(Mounts main) {
@@ -25,6 +24,5 @@ public class HorseLoader {
 	horse.setColor(mount.getColor());
 
 	main.registerHorseInWorld(horse.getUniqueId(), mount);
-
     }
 }
