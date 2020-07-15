@@ -9,8 +9,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import creeoer.plugins.mounts.main.Commands;
-import creeoer.plugins.mounts.main.MountLoader;
 import creeoer.plugins.mounts.main.Mounts;
+import creeoer.plugins.mounts.main.SaddleHandler;
 import creeoer.plugins.mounts.mysql.PlayerManager;
 import creeoer.plugins.mounts.objects.HorseMount;
 import creeoer.plugins.mounts.objects.MountEntity;
@@ -18,12 +18,12 @@ import net.md_5.bungee.api.ChatColor;
 
 public class RentChecker extends BukkitRunnable {
     private PlayerManager playerManager;
-    private MountLoader mountLoader;
+    private SaddleHandler saddleHandler;
     private Mounts main;
 
     public RentChecker(Mounts main) {
 	playerManager = main.getPlayerManager();
-	mountLoader = main.getMountLoader();
+	saddleHandler = main.getSaddleHandler();
 	this.main = main;
     }
 
@@ -34,7 +34,7 @@ public class RentChecker extends BukkitRunnable {
 	// go through owners list and check times
 	for (String owner : playerManager.getCurrentRenters()) {
 	    long timeBought;
-	    long rentTime = mountLoader.getMountFromID(playerManager.getPlayerHorseID(owner)).getRentTime();
+	    long rentTime = saddleHandler.getMountFromID(playerManager.getPlayerHorseID(owner)).getRentTime();
 
 	    if (rentTimes.get(owner) != null) {
 		timeBought = rentTimes.get(owner);
@@ -72,6 +72,5 @@ public class RentChecker extends BukkitRunnable {
 		rentTimes.put(owner, timeBought);
 	    }
 	}
-
     }
 }

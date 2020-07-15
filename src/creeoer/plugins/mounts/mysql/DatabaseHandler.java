@@ -13,7 +13,10 @@ import creeoer.plugins.mounts.main.Mounts;
 public class DatabaseHandler {
     private Mounts main;
     private Connection connection;
-    private static String host, database, user, password;
+    private static String host;
+    private static String database;
+    private static String user;
+    private static String password;
     private static int port;
 
     public DatabaseHandler(Mounts pluginInstance) {
@@ -56,8 +59,9 @@ public class DatabaseHandler {
 
     public void closeConnection() {
 	try {
-	    if (connection == null)
+	    if (connection == null) {
 		return;
+	    }
 
 	    if (!connection.isClosed()) {
 		connection.close();
@@ -74,13 +78,11 @@ public class DatabaseHandler {
 	    e.printStackTrace();
 	    main.getLogger().severe("Problem with MySQL connectivity!");
 	    return null;
-
 	}
     }
 
     public boolean checkIfTablesExist() throws SQLException {
-	Statement statement = connection.createStatement();
-	ResultSet result = statement.executeQuery("SHOW TABLES LIKE 'renters'");
+	ResultSet result = getStatement().executeQuery("SHOW TABLES LIKE 'renters'");
 	return result.isBeforeFirst();
     }
 
@@ -101,7 +103,7 @@ public class DatabaseHandler {
 	String horsesTable = "CREATE TABLE horses" + "(horseNumber INTEGER, " + " world VARCHAR(255), " + " x DOUBLE, "
 		+ " y DOUBLE, " + " z DOUBLE, " + " yaw FLOAT, " + " pitch FLOAT, " + " id VARCHAR(255), "
 		+ " owner VARCHAR(255), " + " PRIMARY KEY ( horseNumber ))";
-	Statement statement = connection.createStatement();
+	Statement statement = getStatement();
 	statement.executeUpdate(rentersTable);
 	statement.executeUpdate(horsesTable);
     }

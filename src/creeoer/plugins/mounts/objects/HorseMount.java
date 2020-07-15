@@ -23,7 +23,6 @@ public class HorseMount {
 	this.price = price;
 	this.rentTime = rentTime;
 	this.armor = armor;
-	// this.horseType = horseType;
 	this.isOwnable = isOwnable;
 	this.color = color;
     }
