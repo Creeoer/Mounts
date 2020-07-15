@@ -16,24 +16,21 @@ import org.bukkit.inventory.ItemStack;
 
 import creeoer.plugins.mounts.main.Commands;
 import creeoer.plugins.mounts.main.HorseLoader;
-import creeoer.plugins.mounts.main.MountLoader;
 import creeoer.plugins.mounts.main.Mounts;
+import creeoer.plugins.mounts.main.SaddleHandler;
 import creeoer.plugins.mounts.mysql.PlayerManager;
 import creeoer.plugins.mounts.objects.HorseMount;
-import creeoer.plugins.mounts.tasks.ReturnHorseTask;
 import net.md_5.bungee.api.ChatColor;
 
 public class SaddleListener implements Listener {
-    private MountLoader mountLoader;
+    private SaddleHandler saddleHandler;
     private PlayerManager playerManager;
-    private ReturnHorseTask task;
-    private Mounts main;
     private HorseLoader horseLoader;
 
     public SaddleListener(Mounts main) {
-	mountLoader = main.getMountLoader();
+	saddleHandler = main.getSaddleHandler();
 	playerManager = main.getPlayerManager();
-	this.main = main;
+
 	horseLoader = main.getHorseLoader();
     }
 
@@ -42,7 +39,7 @@ public class SaddleListener implements Listener {
 	if ((event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)
 		&& event.getPlayer().getItemInHand().getType() == Material.SADDLE
 		&& event.getPlayer().getItemInHand().hasItemMeta()) {
-	    HorseMount mount = mountLoader.getMountFromItem(event.getPlayer().getItemInHand());
+	    HorseMount mount = saddleHandler.getMountFromItem(event.getPlayer().getItemInHand());
 
 	    if (mount != null) {
 		Player player = event.getPlayer();
@@ -80,7 +77,7 @@ public class SaddleListener implements Listener {
 	    Player p = (Player) event.getDamager();
 	    if (p.getItemInHand().getType() == Material.SADDLE) {
 		ItemStack saddle = p.getItemInHand();
-		HorseMount mount = mountLoader.getMountFromItem(saddle);
+		HorseMount mount = saddleHandler.getMountFromItem(saddle);
 
 		if (mount != null) {
 		    Pig pig = (Pig) event.getEntity();
@@ -97,7 +94,7 @@ public class SaddleListener implements Listener {
     public void onPigClick(PlayerInteractEntityEvent event) {
 	if (event.getPlayer().getItemInHand().getType() == Material.SADDLE) {
 	    ItemStack saddle = event.getPlayer().getItemInHand();
-	    HorseMount mount = mountLoader.getMountFromItem(saddle);
+	    HorseMount mount = saddleHandler.getMountFromItem(saddle);
 
 	    if (mount != null) {
 		event.setCancelled(true);
@@ -115,7 +112,7 @@ public class SaddleListener implements Listener {
 		if (view.getItem(i) != null) {
 		    ItemStack item = view.getItem(i);
 		    if (item.hasItemMeta()) {
-			HorseMount mount = mountLoader.getMountFromItem(item);
+			HorseMount mount = saddleHandler.getMountFromItem(item);
 			if (mount != null) {
 			    e.getWhoClicked().sendMessage(
 				    Commands.MOUNT_PREFIX + ChatColor.RED + "Don't put saddles in anvils ):");

@@ -16,7 +16,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import creeoer.plugins.mounts.objects.HorseMount;
 import creeoer.plugins.mounts.objects.HorseMountBuilder;
 
-public class MountLoader {
+public class SaddleHandler {
     private YamlConfiguration horseFile;
     private Mounts main;
 
@@ -24,9 +24,9 @@ public class MountLoader {
 
     private HashMap<HorseMount, ItemStack> horseMountAndSaddleMap;
 
-    public MountLoader(Mounts pluginInstance) {
+    public SaddleHandler(Mounts pluginInstance) {
 	main = pluginInstance;
-	horseFile = (YamlConfiguration) pluginInstance.getConfigFile();
+	horseFile = pluginInstance.getConfigFile();
 
 	loadHorseMountsAndCreateSaddles();
     }

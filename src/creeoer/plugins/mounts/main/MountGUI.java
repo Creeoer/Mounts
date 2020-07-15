@@ -5,7 +5,6 @@ import java.util.Map.Entry;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -17,12 +16,12 @@ public class MountGUI {
      */
 
     private Inventory inventory;
-    private YamlConfiguration horseFile;
-    private MountLoader mountLoader;
+
+    private SaddleHandler saddleHandler;
 
     public MountGUI(Mounts pluginInstance) {
 	inventory = Bukkit.createInventory(null, 27, ChatColor.GREEN + "Rent A Horse");
-	mountLoader = pluginInstance.getMountLoader();
+	saddleHandler = pluginInstance.getSaddleHandler();
 	loadHorseButtons();
     }
 
@@ -34,7 +33,7 @@ public class MountGUI {
     public void loadHorseButtons() {
 	// loop through set of horse mounts, get itemstack and place in vneotyry
 	int currentSlot = 11;
-	for (Entry<HorseMount, ItemStack> entry : mountLoader.getHorseMountAndSaddleMap().entrySet()) {
+	for (Entry<HorseMount, ItemStack> entry : saddleHandler.getHorseMountAndSaddleMap().entrySet()) {
 	    if (!entry.getKey().isOwnable()) {
 		ItemStack stack = entry.getValue();
 		stack.setType(Material.SADDLE);
