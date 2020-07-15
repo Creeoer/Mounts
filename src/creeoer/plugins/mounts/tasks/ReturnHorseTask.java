@@ -7,22 +7,22 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import creeoer.plugins.mounts.main.Commands;
-import creeoer.plugins.mounts.main.MountLoader;
 import creeoer.plugins.mounts.main.Mounts;
+import creeoer.plugins.mounts.main.SaddleHandler;
 import creeoer.plugins.mounts.mysql.PlayerManager;
 import creeoer.plugins.mounts.objects.HorseMount;
 import creeoer.plugins.mounts.objects.MountEntity;
 import net.md_5.bungee.api.ChatColor;
 
 public class ReturnHorseTask extends BukkitRunnable {
-    private MountLoader mountLoader;
+    private SaddleHandler saddleHandler;
     private PlayerManager playerManager;
     private MountEntity mountEntity;
     private Mounts main;
 
     public ReturnHorseTask(Mounts main, MountEntity entity) {
 	this.main = main;
-	mountLoader = main.getMountLoader();
+	saddleHandler = main.getSaddleHandler();
 	this.mountEntity = entity;
 	this.playerManager = main.getPlayerManager();
     }
@@ -35,7 +35,7 @@ public class ReturnHorseTask extends BukkitRunnable {
 	    // get owner...
 	    String ownerName = mountEntity.getCustomName().getString().replace("'s Horse", "");
 	    HorseMount mountType = main.retrieveHorseMountType(mountEntity.getUniqueID());
-	    ItemStack stack = mountLoader.getHorseMountAndSaddleMap().get(mountType);
+	    ItemStack stack = saddleHandler.getHorseMountAndSaddleMap().get(mountType);
 	    stack.setType(Material.SADDLE);
 	    OfflinePlayer player = Bukkit.getOfflinePlayer(ownerName);
 	    if (!player.isOnline()) {
